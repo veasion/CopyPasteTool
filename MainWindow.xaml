@@ -1,0 +1,23 @@
+﻿<Window x:Name="CopyPasteToolWindow" x:Class="CopyPasteTool.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:CopyPasteTool"
+        mc:Ignorable="d"
+        Title="Copy Paste Tool" Height="224.353" Width="305.791" Unloaded="Window_Unloaded" WindowStartupLocation="CenterScreen" ResizeMode="NoResize">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="14*"/>
+            <ColumnDefinition Width="133*"/>
+            <ColumnDefinition Width="3*"/>
+        </Grid.ColumnDefinitions>
+        <Label Content="Ctrl + C，Ctrl + V" HorizontalAlignment="Left" Margin="46.155,21,0,0" VerticalAlignment="Top" Height="25.247" Width="132.697" FontSize="14" Grid.Column="1"/>
+
+        <RadioButton x:Name="radio1" Content="变量命名" Height="25" Margin="140,71,0,0" VerticalAlignment="Top" Checked="Radio1_Checked" FontSize="14" Grid.Column="1"/>
+        <RadioButton x:Name="radio2" Content="自定义" HorizontalAlignment="Left" Margin="32,71,0,0" VerticalAlignment="Top" IsChecked="True" Height="21" Width="97" FontSize="14" Checked="Radio2_Checked" Grid.Column="1"/>
+        <TextBox x:Name="otherText" HorizontalAlignment="Left" Height="23" Margin="9,112,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="282" TextChanged="OtherText_TextChanged" Grid.ColumnSpan="2" MaxLines="10"/>
+        <WebBrowser x:Name="webBrowser" HorizontalAlignment="Left" Height="47" Margin="-1,145,-13,0" VerticalAlignment="Top" Width="314" Grid.ColumnSpan="3"/>
+
+    </Grid>
+</Window>
