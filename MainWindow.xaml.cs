@@ -24,11 +24,9 @@ namespace CopyPasteTool
 
         KeyboardHook hook;
 
+        private bool open = true;
         private bool isVar = false;
         private const string html = ".html";
-        private const string mtc = "mtc";
-        private const string mtcHtml = "mtc-html";
-        private const string mtcJs = "mtc-js";
 
         private string otherForText = "";
         public static bool isWeb = false;
@@ -54,7 +52,6 @@ namespace CopyPasteTool
             sb.AppendLine("js/html");
             sb.AppendLine(".html/.js");
             sb.AppendLine("create js/html");
-            sb.AppendLine("mtc/mtc-html/mtc-js");
             // 提示
             this.otherText.ToolTip = sb.ToString();
         }
@@ -82,8 +79,17 @@ namespace CopyPasteTool
         {
             try
             {
+                if (!open)
+                {
+                    return;
+                }
                 Thread.Sleep(200);
                 string text = System.Windows.Clipboard.GetText();
+                if (text == null || text == "")
+                {
+                    Thread.Sleep(300);
+                    text = System.Windows.Clipboard.GetText();
+                }
                 if (isVar)
                 {
                     text = LowerCamelCase(text);
@@ -93,7 +99,9 @@ namespace CopyPasteTool
                     text = Other(text);
                 }
                 System.Windows.Clipboard.SetText(text);
-            } catch(Exception e) {
+            }
+            catch (Exception e)
+            {
                 Console.WriteLine("发生异常：" + e.Message);
             }
         }
@@ -118,7 +126,8 @@ namespace CopyPasteTool
             if (index != -1)
             {
                 return code.Substring(0, index).Trim();
-            } else
+            }
+            else
             {
                 return code;
             }
@@ -142,11 +151,7 @@ namespace CopyPasteTool
             int len = name.Length;
             if (len > 3)
             {
-                name = name.Replace("PO", "").Replace("VO", "").Replace("DTO", "").Replace("-", "_");
-                if (name.EndsWith("s") || name.EndsWith("S"))
-                {
-                    name = name.Substring(0, name.Length - 1) + "List";
-                }
+                name = name.Replace("-", "_");
             }
             len = name.Length;
             bool u = true;
@@ -162,11 +167,13 @@ namespace CopyPasteTool
                             if (name[i + 1] == 's' && i + 1 == len - 1)
                             {
                                 sb.Append(c.ToString().ToLower());
-                            } else
+                            }
+                            else
                             {
                                 sb.Append(c);
                             }
-                        } else
+                        }
+                        else
                         {
                             sb.Append(c.ToString().ToLower());
                         }
@@ -222,6 +229,7 @@ namespace CopyPasteTool
 
         private void Radio1_Checked(object sender, RoutedEventArgs e)
         {
+            open = true;
             isVar = true;
             if (this.otherText != null)
             {
@@ -231,6 +239,7 @@ namespace CopyPasteTool
 
         private void Radio2_Checked(object sender, RoutedEventArgs e)
         {
+            open = true;
             isVar = false;
             if (this.otherText != null)
             {
@@ -238,57 +247,16 @@ namespace CopyPasteTool
             }
         }
 
-        private static string Mtc(string otherText, string code)
+        private void Radio3_Checked(object sender, RoutedEventArgs e)
         {
-            String text = code;
-            if (otherText.Equals(mtcJs))
-            {
-                text = "this.mtc('" + code.Replace("'", "").Trim() + "')";
-            }
-            else if(otherText.Equals(mtcHtml))
-            {
-                if (code.IndexOf("\"") != -1 && code[0] < 300)
-                {
-                    int sIndex = code.IndexOf("\"");
-                    int eIndex = code.IndexOf("\"", sIndex + 1);
-                    code = code.Substring(sIndex + 1, eIndex - sIndex - 1).Replace("'", "").Trim();
-                    string end = "";
-                    if (code.EndsWith(":") || code.EndsWith("："))
-                    {
-                        end = " + '" + code.Substring(code.Length - 1) + "'";
-                        code = code.Substring(0, code.Length - 1);
-                    }
-                    text = text.Substring(0, sIndex + 1) + "mtc('" + code + "')" + end + text.Substring(eIndex);
-                    if (!text.StartsWith(":"))
-                    {
-                        text = ":" + text;
-                    }
-                }
-                else if (code.IndexOf("{{") != -1)
-                {
-                    code = code.Replace("{{", "").Replace("}}", "").Replace("'", "").Trim();
-                    text = "{{ mtc('" + code.Trim() + "') }}";
-                }
-                else
-                {
-                    text = "{{ mtc('" + code.Trim() + "') }}";
-                }
-            } else
-            {
-                text = "mtc('" + code.Replace("'", "").Trim() + "')";
-            }
-            return text;
+            open = false;
         }
 
         private void OtherText_TextChanged(object sender, TextChangedEventArgs e)
         {
             isWeb = false;
             otherForText = this.otherText.Text.Trim();
-            if (mtcJs.Equals(otherForText))
-            {
-                System.Windows.Clipboard.SetText("mtc(cn) {\r\n    return cn\r\n}");
-            }
-            else if (!"".Equals(otherForText))
+            if (!"".Equals(otherForText))
             {
                 if (otherForText.EndsWith(html) && System.IO.File.Exists(otherForText))
                 {
@@ -309,13 +277,14 @@ namespace CopyPasteTool
                     this.webBrowser.Navigate(new Uri(htmlDir));
                     isWeb = true;
                 }
-                else if(otherForText.StartsWith("create"))
+                else if (otherForText.StartsWith("create"))
                 {
                     string file = otherForText.Replace("create", "").Trim();
                     if ("js".Equals(file))
                     {
                         file = "temp.js";
-                    } else if("html".Equals(file))
+                    }
+                    else if ("html".Equals(file))
                     {
                         file = "temp.html";
                     }
@@ -326,7 +295,7 @@ namespace CopyPasteTool
                         this.otherText.Text = path;
                         this.otherText.Select(path.Length, 0);
                     }
-                    else if(file.EndsWith(".html"))
+                    else if (file.EndsWith(".html"))
                     {
                         File.WriteAllText(path, GetHtmlCode());
                         this.otherText.Text = path;
@@ -337,7 +306,8 @@ namespace CopyPasteTool
             if ("html".Equals(otherForText))
             {
                 System.Windows.Clipboard.SetText(GetHtmlCode());
-            } else if ("js".Equals(otherForText))
+            }
+            else if ("js".Equals(otherForText))
             {
                 System.Windows.Clipboard.SetText(GetJsCode());
             }
@@ -346,7 +316,7 @@ namespace CopyPasteTool
 
         private string GetHtmlCode()
         {
-            return "<html>\r\n<body></body>\r\n<script type=\"text/javascript\">\r\n" + GetJsCode() +"\r\n</script>\r\n</html>";
+            return "<html>\r\n<body></body>\r\n<script type=\"text/javascript\">\r\n" + GetJsCode() + "\r\n</script>\r\n</html>";
         }
 
         private string GetJsCode()
@@ -361,16 +331,18 @@ namespace CopyPasteTool
             sw.Close();
         }
 
-        private void CreateHtmlByJs (string jsCode)
+        private void CreateHtmlByJs(string jsCode)
         {
             StringBuilder sb = new StringBuilder();
             sb.Append("<html>\r\n<body></body>\r\n");
             bool hasScriptEl = jsCode.Contains("<script") || jsCode.Contains("text/javascript");
-            if (!hasScriptEl) {
+            if (!hasScriptEl)
+            {
                 sb.Append("<script type=\"text/javascript\">\r\n	");
             }
             sb.Append(jsCode);
-            if (!hasScriptEl) {
+            if (!hasScriptEl)
+            {
                 sb.Append("\r\n</script>");
             }
             sb.Append("\r\n</html>");
@@ -379,13 +351,15 @@ namespace CopyPasteTool
 
         private delegate void js(string text);
 
-        private void eval(string text) {
+        private void eval(string text)
+        {
             try
             {
                 object result = this.webBrowser.InvokeScript("change", text);
                 evalResult = result != null ? result.ToString() : "";
                 Console.WriteLine("执行结果：" + evalResult);
-            }catch(Exception e)
+            }
+            catch (Exception e)
             {
                 Console.WriteLine("发生错误：" + e.Message);
             }
@@ -402,11 +376,7 @@ namespace CopyPasteTool
                 {
                     return text;
                 }
-                if (otherText.StartsWith(mtc))
-                {
-                    text = Mtc(otherText, code);
-                }
-                else if (isWeb)
+                if (isWeb)
                 {
                     this.webBrowser.Dispatcher.Invoke(new js(eval), code);
                     text = evalResult;

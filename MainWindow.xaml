@@ -14,8 +14,9 @@
         </Grid.ColumnDefinitions>
         <Label Content="Ctrl + C，Ctrl + V" HorizontalAlignment="Left" Margin="46.155,21,0,0" VerticalAlignment="Top" Height="25.247" Width="132.697" FontSize="14" Grid.Column="1"/>
 
-        <RadioButton x:Name="radio1" Content="变量命名" Height="25" Margin="140,71,0,0" VerticalAlignment="Top" Checked="Radio1_Checked" FontSize="14" Grid.Column="1"/>
-        <RadioButton x:Name="radio2" Content="自定义" HorizontalAlignment="Left" Margin="32,71,0,0" VerticalAlignment="Top" IsChecked="True" Height="21" Width="97" FontSize="14" Checked="Radio2_Checked" Grid.Column="1"/>
+        <RadioButton x:Name="radio1" Content="变量命名" HorizontalAlignment="Left" Margin="0,70,0,0" Height="25" VerticalAlignment="Top" Checked="Radio1_Checked" FontSize="14" Grid.Column="1"/>
+        <RadioButton x:Name="radio2" Content="自定义" HorizontalAlignment="Left" Margin="95,70,0,0" VerticalAlignment="Top" IsChecked="True" Height="25" FontSize="14" Checked="Radio2_Checked" Grid.Column="1"/>
+        <RadioButton x:Name="radio3" Content="关闭" HorizontalAlignment="Left" Margin="180,70,0,0" Height="25" VerticalAlignment="Top" Checked="Radio3_Checked" FontSize="14" Grid.Column="1"/>
         <TextBox x:Name="otherText" HorizontalAlignment="Left" Height="23" Margin="9,112,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="282" TextChanged="OtherText_TextChanged" Grid.ColumnSpan="2" MaxLines="10"/>
         <WebBrowser x:Name="webBrowser" HorizontalAlignment="Left" Height="47" Margin="-1,145,-13,0" VerticalAlignment="Top" Width="314" Grid.ColumnSpan="3"/>
 

@@ -13,7 +13,6 @@ C:\Users\user\source\repos\LowerCamelCase\obj\Debug\CopyPasteTool.exe
 C:\Users\user\source\repos\LowerCamelCase\obj\Debug\CopyPasteTool.pdb
 C:\Users\user\source\repos\CopyPasteTool\bin\Debug\CopyPasteTool.exe
 C:\Users\user\source\repos\CopyPasteTool\bin\Debug\CopyPasteTool.pdb
-C:\Users\user\source\repos\CopyPasteTool\obj\Debug\CopyPasteTool.csprojAssemblyReference.cache
 C:\Users\user\source\repos\CopyPasteTool\obj\Debug\MainWindow.g.cs
 C:\Users\user\source\repos\CopyPasteTool\obj\Debug\App.g.cs
 C:\Users\user\source\repos\CopyPasteTool\obj\Debug\CopyPasteTool_MarkupCompile.cache
