@@ -52,6 +52,7 @@ namespace CopyPasteTool
             sb.AppendLine("js/html");
             sb.AppendLine(".html/.js");
             sb.AppendLine("create js/html");
+            sb.AppendLine("use cvtools.js");
             // 提示
             this.otherText.ToolTip = sb.ToString();
         }
@@ -89,6 +90,11 @@ namespace CopyPasteTool
                 {
                     Thread.Sleep(300);
                     text = System.Windows.Clipboard.GetText();
+                    if (text == null || text == "")
+                    {
+                        Thread.Sleep(200);
+                        text = System.Windows.Clipboard.GetText();
+                    }
                 }
                 if (isVar)
                 {
@@ -276,6 +282,24 @@ namespace CopyPasteTool
                     CreateHtmlByJs(jsCode);
                     this.webBrowser.Navigate(new Uri(htmlDir));
                     isWeb = true;
+                }
+                else if (otherForText.StartsWith("use ") && (otherForText.EndsWith(".js") || otherForText.EndsWith(".html")))
+                {
+                    string file = otherForText.Replace("use ", "").Trim();
+                    string path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\" + file;
+                    if (!File.Exists(path))
+                    {
+                        if (file.EndsWith(".js"))
+                        {
+                            File.WriteAllText(path, GetJsCode());
+                        }
+                        else if (file.EndsWith(".html"))
+                        {
+                            File.WriteAllText(path, GetHtmlCode());
+                        }
+                    }
+                    this.otherText.Text = path;
+                    this.otherText.Select(path.Length, 0);
                 }
                 else if (otherForText.StartsWith("create"))
                 {
