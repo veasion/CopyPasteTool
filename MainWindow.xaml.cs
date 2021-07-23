@@ -251,6 +251,7 @@ namespace CopyPasteTool
             if (this.otherText != null)
             {
                 this.otherText.Visibility = Visibility.Visible;
+                OtherText_TextChanged(null, null);
             }
         }
 
@@ -259,7 +260,7 @@ namespace CopyPasteTool
             open = false;
         }
 
-        private void OtherText_TextChanged(object sender, TextChangedEventArgs e)
+        private void OtherText_TextChanged(object s, TextChangedEventArgs e)
         {
             isWeb = false;
             otherForText = this.otherText.Text.Trim();
