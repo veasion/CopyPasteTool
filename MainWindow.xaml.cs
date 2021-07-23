@@ -34,6 +34,8 @@ namespace CopyPasteTool
         public static string evalResult;
         public static string htmlDir;
 
+        private string currentDir = Directory.GetCurrentDirectory();
+
         public MainWindow()
         {
             InitializeComponent();
@@ -285,16 +287,20 @@ namespace CopyPasteTool
                 else if (otherForText.StartsWith("use ") && (otherForText.EndsWith(".js") || otherForText.EndsWith(".html")))
                 {
                     string file = otherForText.Replace("use ", "").Trim();
-                    string path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\" + file;
+                    string path = currentDir + "\\" + file;
                     if (!File.Exists(path))
                     {
-                        if (file.EndsWith(".js"))
+                        path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\" + file;
+                        if (!File.Exists(path))
                         {
-                            File.WriteAllText(path, GetJsCode());
-                        }
-                        else if (file.EndsWith(".html"))
-                        {
-                            File.WriteAllText(path, GetHtmlCode());
+                            if (file.EndsWith(".js"))
+                            {
+                                File.WriteAllText(path, GetJsCode());
+                            }
+                            else if (file.EndsWith(".html"))
+                            {
+                                File.WriteAllText(path, GetHtmlCode());
+                            }
                         }
                     }
                     this.otherText.Text = path;
