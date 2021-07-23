@@ -12,6 +12,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.IO;
+using System.Windows.Threading;
 
 namespace CopyPasteTool
 {
@@ -68,10 +69,8 @@ namespace CopyPasteTool
             // 判断按下的键（Ctrl + C） 
             if ((int)System.Windows.Forms.Control.ModifierKeys == (int)Keys.Control && e.KeyValue == (int)Keys.C)
             {
-                ThreadStart threadStart = new ThreadStart(Handle);
-                Thread thread = new Thread(threadStart);
+                Thread thread = new Thread(new ThreadStart(Handle));
                 thread.TrySetApartmentState(ApartmentState.STA);
-                thread.IsBackground = true;
                 thread.Start();
             }
         }
