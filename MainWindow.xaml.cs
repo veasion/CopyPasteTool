@@ -17,9 +17,6 @@ using System.Windows.Threading;
 namespace CopyPasteTool
 {
 
-    /// <summary>
-    /// MainWindow.xaml 的交互逻辑
-    /// </summary>
     public partial class MainWindow : Window
     {
 
@@ -27,10 +24,10 @@ namespace CopyPasteTool
 
         private bool open = true;
         private bool isVar = false;
-        private const string html = ".html";
 
-        private string otherForText = "";
         public static bool isWeb = false;
+        private static string param2 = null;
+        private static string otherForText = "";
         public static string evalResult;
         public static string htmlDir;
 
@@ -55,9 +52,10 @@ namespace CopyPasteTool
             sb.AppendLine("js/html");
             sb.AppendLine(".html/.js");
             sb.AppendLine("create js/html");
-            sb.AppendLine("use cvtools.js");
+            sb.AppendLine("use cv.js");
             // 提示
             this.otherText.ToolTip = sb.ToString();
+            this.otherText.Text = CacheHelper.getOtherText();
         }
 
         private void KeyPressEvent(object sender, KeyPressEventArgs e)
@@ -99,7 +97,7 @@ namespace CopyPasteTool
                 }
                 if (isVar)
                 {
-                    text = LowerCamelCase(text);
+                    text = StringHelper.LowerCamelCase(text);
                 }
                 else
                 {
@@ -111,122 +109,6 @@ namespace CopyPasteTool
             {
                 Console.WriteLine("发生异常：" + e.Message);
             }
-        }
-
-        private String GetSpace(String code)
-        {
-            return code.Substring(0, code.Length - code.TrimStart().Length);
-        }
-
-        private String GetEnum(String code)
-        {
-            code = code.Trim();
-            int index = code.IndexOf("(");
-            if (index == -1)
-            {
-                index = code.IndexOf(",");
-            }
-            if (index == -1)
-            {
-                index = code.IndexOf(";");
-            }
-            if (index != -1)
-            {
-                return code.Substring(0, index).Trim();
-            }
-            else
-            {
-                return code;
-            }
-        }
-
-        private string LowerCamelCase(string name)
-        {
-            if (name == null || "".Equals(name.Trim()))
-            {
-                return null;
-            }
-            if (name.StartsWith("_"))
-            {
-                name = name.Substring(1, name.Length - 1);
-            }
-            if (name.EndsWith("_"))
-            {
-                name = name.Substring(0, name.Length - 1);
-            }
-            StringBuilder sb = new StringBuilder();
-            int len = name.Length;
-            if (len > 3)
-            {
-                name = name.Replace("-", "_");
-            }
-            len = name.Length;
-            bool u = true;
-            for (int i = 0; i < len; i++)
-            {
-                char c = name[i];
-                if ((int)c < 97)
-                {
-                    if (u)
-                    {
-                        if (i != 0 && i + 1 < len && (int)name[i + 1] >= 97)
-                        {
-                            if (name[i + 1] == 's' && i + 1 == len - 1)
-                            {
-                                sb.Append(c.ToString().ToLower());
-                            }
-                            else
-                            {
-                                sb.Append(c);
-                            }
-                        }
-                        else
-                        {
-                            sb.Append(c.ToString().ToLower());
-                        }
-                    }
-                    else
-                    {
-                        u = true;
-                        sb.Append(c);
-                    }
-                }
-                else
-                {
-                    u = false;
-                    sb.Append(c);
-                }
-            }
-            name = sb.ToString();
-            if (name.IndexOf("_") != -1)
-            {
-                while (name.IndexOf("__") != -1)
-                {
-                    name = name.Replace("__", "_");
-                }
-                sb = new StringBuilder();
-                len = name.Length;
-                for (int i = 0; i < len; i++)
-                {
-                    char c = name[i];
-                    if (i == 0)
-                    {
-                        sb.Append(c.ToString().ToLower());
-                    }
-                    else if (c == '_')
-                    {
-                        if (++i < len)
-                        {
-                            sb.Append(name[i].ToString().ToUpper());
-                        }
-                    }
-                    else
-                    {
-                        sb.Append(c);
-                    }
-                }
-            }
-            return sb.ToString();
         }
 
         private void Window_Unloaded(object sender, RoutedEventArgs e)
@@ -264,94 +146,90 @@ namespace CopyPasteTool
         {
             isWeb = false;
             otherForText = this.otherText.Text.Trim();
-            if (!"".Equals(otherForText))
+            if ("".Equals(otherForText))
             {
-                if (otherForText.EndsWith(html) && System.IO.File.Exists(otherForText))
+                return;
+            }
+
+            int idx = -1;
+            if ((idx = otherForText.IndexOf(".js:")) > 0)
+            {
+                param2 = otherForText.Substring(idx + 4);
+                otherForText = otherForText.Substring(0, idx + 3);
+            }
+            else if ((idx = otherForText.IndexOf(".html:")) > 0)
+            {
+                param2 = otherForText.Substring(idx + 6);
+                otherForText = otherForText.Substring(0, idx + 5);
+            }
+
+            if ((otherForText.EndsWith(".html") || otherForText.EndsWith(".js")) && File.Exists(otherForText))
+            {
+                string txt = File.ReadAllText(otherForText);
+                if (otherForText.EndsWith(".js"))
                 {
-                    string htmlCode = System.IO.File.ReadAllText(otherForText);
-                    CreateHtml(htmlCode);
-                    this.webBrowser.Navigate(new Uri(htmlDir));
-                    isWeb = true;
+                    CreateHtmlByJs(txt);
                 }
-                else if (otherForText.StartsWith("http"))
+                else
                 {
-                    this.webBrowser.Navigate(new Uri(otherForText));
-                    isWeb = true;
+                    CreateHtml(txt);
                 }
-                else if (otherForText.EndsWith(".js") && System.IO.File.Exists(otherForText))
+                this.webBrowser.Navigate(new Uri(htmlDir));
+                isWeb = true;
+                CacheHelper.cacheOtherText(otherForText);
+            }
+            else if (otherForText.StartsWith("http"))
+            {
+                this.webBrowser.Navigate(new Uri(otherForText));
+                isWeb = true;
+            }
+            else if (otherForText.StartsWith("create "))
+            {
+                string file = otherForText.Replace("create ", "").Trim();
+                if ("js".Equals(file))
                 {
-                    string jsCode = System.IO.File.ReadAllText(otherForText);
-                    CreateHtmlByJs(jsCode);
-                    this.webBrowser.Navigate(new Uri(htmlDir));
-                    isWeb = true;
+                    file = "temp.js";
                 }
-                else if (otherForText.StartsWith("use ") && (otherForText.EndsWith(".js") || otherForText.EndsWith(".html")))
+                else if ("html".Equals(file))
                 {
-                    string file = otherForText.Replace("use ", "").Trim();
-                    string path = currentDir + "\\" + file;
-                    if (!File.Exists(path))
-                    {
-                        path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\" + file;
-                        if (!File.Exists(path))
-                        {
-                            if (file.EndsWith(".js"))
-                            {
-                                File.WriteAllText(path, GetJsCode());
-                            }
-                            else if (file.EndsWith(".html"))
-                            {
-                                File.WriteAllText(path, GetHtmlCode());
-                            }
-                        }
-                    }
+                    file = "temp.html";
+                }
+                string path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\" + file;
+                if (file.EndsWith(".js"))
+                {
+                    File.WriteAllText(path, HtmlHelper.GetJsCode());
                     this.otherText.Text = path;
                     this.otherText.Select(path.Length, 0);
                 }
-                else if (otherForText.StartsWith("create"))
+                else if (file.EndsWith(".html"))
                 {
-                    string file = otherForText.Replace("create", "").Trim();
-                    if ("js".Equals(file))
-                    {
-                        file = "temp.js";
-                    }
-                    else if ("html".Equals(file))
-                    {
-                        file = "temp.html";
-                    }
-                    string path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\" + file;
-                    if (file.EndsWith(".js"))
-                    {
-                        File.WriteAllText(path, GetJsCode());
-                        this.otherText.Text = path;
-                        this.otherText.Select(path.Length, 0);
-                    }
-                    else if (file.EndsWith(".html"))
-                    {
-                        File.WriteAllText(path, GetHtmlCode());
-                        this.otherText.Text = path;
-                        this.otherText.Select(path.Length, 0);
-                    }
+                    File.WriteAllText(path, HtmlHelper.GetHtmlCode());
+                    this.otherText.Text = path;
+                    this.otherText.Select(path.Length, 0);
                 }
             }
-            if ("html".Equals(otherForText))
+            else if (otherForText.StartsWith("use ") && (otherForText.EndsWith(".js") || otherForText.EndsWith(".html")))
             {
-                System.Windows.Clipboard.SetText(GetHtmlCode());
+                string file = otherForText.Replace("use ", "").Trim();
+                string path = currentDir + "\\" + file;
+                if (!File.Exists(path))
+                {
+                    path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\" + file;
+                    if (!File.Exists(path))
+                    {
+                        if (file.EndsWith(".js"))
+                        {
+                            File.WriteAllText(path, HtmlHelper.GetJsCode());
+                        }
+                        else if (file.EndsWith(".html"))
+                        {
+                            File.WriteAllText(path, HtmlHelper.GetHtmlCode());
+                        }
+                    }
+                }
+                this.otherText.Text = path;
+                this.otherText.Select(path.Length, 0);
             }
-            else if ("js".Equals(otherForText))
-            {
-                System.Windows.Clipboard.SetText(GetJsCode());
-            }
-            // this.otherText.ToolTip = otherForText;
-        }
-
-        private string GetHtmlCode()
-        {
-            return "<html>\r\n<body></body>\r\n<script type=\"text/javascript\">\r\n" + GetJsCode() + "\r\n</script>\r\n</html>";
-        }
-
-        private string GetJsCode()
-        {
-            return "\r\n// 自定义改变文本函数\r\nfunction change(code) {\r\n  return '改变后的: ' + code;\r\n}\r\n";
         }
 
         private void CreateHtml(string htmlCode)
@@ -363,20 +241,7 @@ namespace CopyPasteTool
 
         private void CreateHtmlByJs(string jsCode)
         {
-            StringBuilder sb = new StringBuilder();
-            sb.Append("<html>\r\n<body></body>\r\n");
-            bool hasScriptEl = jsCode.Contains("<script") || jsCode.Contains("text/javascript");
-            if (!hasScriptEl)
-            {
-                sb.Append("<script type=\"text/javascript\">\r\n	");
-            }
-            sb.Append(jsCode);
-            if (!hasScriptEl)
-            {
-                sb.Append("\r\n</script>");
-            }
-            sb.Append("\r\n</html>");
-            CreateHtml(sb.ToString());
+            CreateHtml(HtmlHelper.GetHtmlCode(jsCode));
         }
 
         private delegate void js(string text);
@@ -385,7 +250,7 @@ namespace CopyPasteTool
         {
             try
             {
-                object result = this.webBrowser.InvokeScript("change", text);
+                object result = this.webBrowser.InvokeScript("change", text, param2);
                 evalResult = result != null ? result.ToString() : "";
                 Console.WriteLine("执行结果：" + evalResult);
             }
@@ -400,7 +265,7 @@ namespace CopyPasteTool
             string text = code;
             try
             {
-                String otherText = otherForText;
+                string otherText = otherForText;
 
                 if (otherText == null || "".Equals(otherText.Trim()))
                 {
@@ -418,5 +283,6 @@ namespace CopyPasteTool
             }
             return text;
         }
+
     }
 }
