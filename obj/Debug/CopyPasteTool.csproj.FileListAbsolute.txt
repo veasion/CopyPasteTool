@@ -24,3 +24,4 @@ C:\Users\user\source\repos\CopyPasteTool\obj\Debug\CopyPasteTool.csproj.Generate
 C:\Users\user\source\repos\CopyPasteTool\obj\Debug\CopyPasteTool.csproj.CoreCompileInputs.cache
 C:\Users\user\source\repos\CopyPasteTool\obj\Debug\CopyPasteTool.exe
 C:\Users\user\source\repos\CopyPasteTool\obj\Debug\CopyPasteTool.pdb
+C:\Users\user\source\repos\CopyPasteTool\obj\Debug\CopyPasteTool.DebugForm.resources

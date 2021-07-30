@@ -21,11 +21,13 @@ namespace CopyPasteTool
     {
 
         KeyboardHook hook;
+        DebugForm debugForm;
 
         private bool open = true;
         private bool isVar = false;
 
         public static bool isWeb = false;
+        private static bool hookRun = false;
         private static string param2 = null;
         private static string otherForText = "";
         public static string evalResult;
@@ -41,7 +43,7 @@ namespace CopyPasteTool
             // 钩住键按下
             hook.KeyDownEvent += KeyDownEvent;
             // 钩住键弹起
-            hook.KeyPressEvent += KeyPressEvent;
+            // hook.KeyPressEvent += KeyPressEvent;
             //安装键盘钩子
             hook.Start();
             // html保存路径
@@ -56,22 +58,32 @@ namespace CopyPasteTool
             // 提示
             this.otherText.ToolTip = sb.ToString();
             this.otherText.Text = CacheHelper.getOtherText();
+            debugForm = new DebugForm(this);
         }
 
         private void KeyPressEvent(object sender, KeyPressEventArgs e)
         {
-            //int i = (int)e.KeyChar;
-            //System.Windows.Forms.MessageBox.Show(i.ToString());
+            // ctrl + c
+            //System.Windows.Forms.MessageBox.Show((e.KeyChar == '\u0003'));
         }
 
-        private void KeyDownEvent(object sender, KeyEventArgs e)
+        private new void KeyDownEvent(object sender, KeyEventArgs e)
         {
             // 判断按下的键（Ctrl + C） 
             if ((int)System.Windows.Forms.Control.ModifierKeys == (int)Keys.Control && e.KeyValue == (int)Keys.C)
             {
+                if (!open || hookRun)
+                {
+                    return;
+                }
                 Thread thread = new Thread(new ThreadStart(Handle));
                 thread.TrySetApartmentState(ApartmentState.STA);
+                thread.IsBackground = true;
                 thread.Start();
+            }
+            else
+            {
+                hookRun = false;
             }
         }
 
@@ -83,37 +95,61 @@ namespace CopyPasteTool
                 {
                     return;
                 }
-                Thread.Sleep(200);
-                string text = System.Windows.Clipboard.GetText();
-                if (text == null || text == "")
-                {
-                    Thread.Sleep(300);
-                    text = System.Windows.Clipboard.GetText();
-                    if (text == null || text == "")
-                    {
-                        Thread.Sleep(200);
-                        text = System.Windows.Clipboard.GetText();
-                    }
-                }
+                hookRun = true;
+                string text = this.GetClipboardText();
                 if (isVar)
                 {
                     text = StringHelper.LowerCamelCase(text);
                 }
                 else
                 {
-                    text = Other(text);
+                    text = invokeJsMethod(text, false);
                 }
-                System.Windows.Clipboard.SetText(text);
+                this.SetClipboardText(text);
             }
             catch (Exception e)
             {
                 Console.WriteLine("发生异常：" + e.Message);
+            }
+            finally
+            {
+                hookRun = false;
             }
         }
 
         private void Window_Unloaded(object sender, RoutedEventArgs e)
         {
             hook.Stop();
+        }
+
+        private string GetClipboardText()
+        {
+            try
+            {
+                string text = System.Windows.Clipboard.GetText();
+                if (text == null || "".Equals(text))
+                {
+                    Thread.Sleep(200);
+                    text = System.Windows.Clipboard.GetText();
+                }
+                return text;
+            }
+            catch (Exception)
+            {
+                return GetClipboardText();
+            }
+        }
+
+        private void SetClipboardText(string text)
+        {
+            try
+            {
+                System.Windows.Clipboard.SetText(text);
+            }
+            catch (Exception)
+            {
+                SetClipboardText(text);
+            }
         }
 
         private void Radio1_Checked(object sender, RoutedEventArgs e)
@@ -144,11 +180,18 @@ namespace CopyPasteTool
 
         private void OtherText_TextChanged(object s, TextChangedEventArgs e)
         {
+            bool debug = false;
             isWeb = false;
             otherForText = this.otherText.Text.Trim();
             if ("".Equals(otherForText))
             {
                 return;
+            }
+
+            if (!open && "debug".Equals(otherForText))
+            {
+                debug = true;
+                otherForText = this.otherText.Text = CacheHelper.getOtherText();
             }
 
             int idx = -1;
@@ -182,6 +225,7 @@ namespace CopyPasteTool
             {
                 this.webBrowser.Navigate(new Uri(otherForText));
                 isWeb = true;
+                CacheHelper.cacheOtherText(otherForText);
             }
             else if (otherForText.StartsWith("create "))
             {
@@ -230,6 +274,10 @@ namespace CopyPasteTool
                 this.otherText.Text = path;
                 this.otherText.Select(path.Length, 0);
             }
+            if (debug)
+            {
+                debugForm.ShowAndInit(param2);
+            }
         }
 
         private void CreateHtml(string htmlCode)
@@ -260,17 +308,23 @@ namespace CopyPasteTool
             }
         }
 
-        private string Other(string code)
+        public void changeParam2(string p)
+        {
+            if (p == null)
+            {
+                OtherText_TextChanged(null, null);
+            }
+            else
+            {
+                param2 = p;
+            }
+        }
+
+        public string invokeJsMethod(string code, bool debug)
         {
             string text = code;
             try
             {
-                string otherText = otherForText;
-
-                if (otherText == null || "".Equals(otherText.Trim()))
-                {
-                    return text;
-                }
                 if (isWeb)
                 {
                     this.webBrowser.Dispatcher.Invoke(new js(eval), code);
@@ -280,6 +334,10 @@ namespace CopyPasteTool
             catch (Exception e)
             {
                 Console.WriteLine("发生异常：" + e.Message);
+                if (debug)
+                {
+                    return "发生异常：" + e.Message;
+                }
             }
             return text;
         }
