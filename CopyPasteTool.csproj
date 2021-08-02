@@ -55,7 +55,6 @@
     <Compile Include="debug.Designer.cs">
       <DependentUpon>debug.cs</DependentUpon>
     </Compile>
-    <Compile Include="StringHelper.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

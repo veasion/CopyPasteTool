@@ -24,13 +24,11 @@ namespace CopyPasteTool
         DebugForm debugForm;
 
         private bool open = true;
-        private bool isVar = false;
 
         public static bool isWeb = false;
         private static bool hookRun = false;
         private static string param2 = null;
         private static string otherForText = "";
-        public static string evalResult;
         public static string htmlDir;
 
         private string currentDir = Directory.GetCurrentDirectory();
@@ -38,6 +36,7 @@ namespace CopyPasteTool
         public MainWindow()
         {
             InitializeComponent();
+            this.webBrowser.LoadCompleted += WebBrowser_LoadCompleted;
             // 按键钩子
             hook = new KeyboardHook();
             // 钩住键按下
@@ -97,14 +96,7 @@ namespace CopyPasteTool
                 }
                 hookRun = true;
                 string text = this.GetClipboardText();
-                if (isVar)
-                {
-                    text = StringHelper.LowerCamelCase(text);
-                }
-                else
-                {
-                    text = invokeJsMethod(text, false);
-                }
+                text = invokeJsMethod(text, false);
                 this.SetClipboardText(text);
             }
             catch (Exception e)
@@ -152,20 +144,9 @@ namespace CopyPasteTool
             }
         }
 
-        private void Radio1_Checked(object sender, RoutedEventArgs e)
+        private void RadioCustomize_Checked(object sender, RoutedEventArgs e)
         {
             open = true;
-            isVar = true;
-            if (this.otherText != null)
-            {
-                this.otherText.Visibility = Visibility.Hidden;
-            }
-        }
-
-        private void Radio2_Checked(object sender, RoutedEventArgs e)
-        {
-            open = true;
-            isVar = false;
             if (this.otherText != null)
             {
                 this.otherText.Visibility = Visibility.Visible;
@@ -173,7 +154,7 @@ namespace CopyPasteTool
             }
         }
 
-        private void Radio3_Checked(object sender, RoutedEventArgs e)
+        private void RadioClose_Checked(object sender, RoutedEventArgs e)
         {
             open = false;
         }
@@ -217,15 +198,11 @@ namespace CopyPasteTool
                 {
                     CreateHtml(txt);
                 }
-                this.webBrowser.Navigate(new Uri(htmlDir));
-                isWeb = true;
-                CacheHelper.cacheOtherText(otherForText);
+                changeWebBrowser(htmlDir);
             }
             else if (otherForText.StartsWith("http"))
             {
-                this.webBrowser.Navigate(new Uri(otherForText));
-                isWeb = true;
-                CacheHelper.cacheOtherText(otherForText);
+                changeWebBrowser(otherForText);
             }
             else if (otherForText.StartsWith("create "))
             {
@@ -280,6 +257,42 @@ namespace CopyPasteTool
             }
         }
 
+        private void changeWebBrowser(string urlOrPath)
+        {
+            this.webBrowser.Navigate(new Uri(urlOrPath));
+            isWeb = true;
+            CacheHelper.cacheOtherText(otherForText);
+        }
+
+        private void WebBrowser_LoadCompleted(object sender, NavigationEventArgs e)
+        {
+            object result = invokeJsMethod("params", null, false);
+            if (result != null)
+            {
+                string[] items = result.ToString().Split('|');
+                if (items.Length == 0)
+                {
+                    return;
+                }
+                this.combo_params.Items.Clear();
+                this.combo_params.Items.Add("NULL");
+                foreach (var item in items)
+                {
+                    this.combo_params.Items.Add(item);
+                }
+                this.combo_params.SelectedIndex = 0;
+            }
+        }
+
+        private void Combo_params_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            param2 = this.combo_params.SelectedItem.ToString();
+            if ("NULL".Equals(param2))
+            {
+                param2 = null;
+            }
+        }
+
         private void CreateHtml(string htmlCode)
         {
             StreamWriter sw = new StreamWriter(htmlDir, false, Encoding.GetEncoding("GB2312"));
@@ -294,20 +307,6 @@ namespace CopyPasteTool
 
         private delegate void js(string text);
 
-        private void eval(string text)
-        {
-            try
-            {
-                object result = this.webBrowser.InvokeScript("change", text, param2);
-                evalResult = result != null ? result.ToString() : "";
-                Console.WriteLine("执行结果：" + evalResult);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("发生错误：" + e.Message);
-            }
-        }
-
         public void changeParam2(string p)
         {
             if (p == null)
@@ -320,16 +319,26 @@ namespace CopyPasteTool
             }
         }
 
-        public string invokeJsMethod(string code, bool debug)
+        public string invokeJsMethod(string param, bool debug)
         {
-            string text = code;
+            if (!isWeb)
+            {
+                return param;
+            }
+            object result = invokeJsMethod("change", param, debug);
+            return result != null ? result.ToString() : param;
+        }
+
+        public object invokeJsMethod(string method, string param, bool debug)
+        {
+            object result = null;
             try
             {
-                if (isWeb)
+                this.webBrowser.Dispatcher.Invoke(new js((param1) =>
                 {
-                    this.webBrowser.Dispatcher.Invoke(new js(eval), code);
-                    text = evalResult;
-                }
+                    result = this.webBrowser.InvokeScript(method, param1, param2);
+                    Console.WriteLine("执行结果：" + result);
+                }), param);
             }
             catch (Exception e)
             {
@@ -339,8 +348,14 @@ namespace CopyPasteTool
                     return "发生异常：" + e.Message;
                 }
             }
-            return text;
+            return result;
         }
 
+        private void Combo_params_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            this.combo_params.Items.Clear();
+            this.combo_params.SelectedIndex = -1;
+            WebBrowser_LoadCompleted(null, null);
+        }
     }
 }
