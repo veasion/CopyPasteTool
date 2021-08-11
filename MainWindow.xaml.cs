@@ -1,18 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Text;
 using System.Windows;
 using System.Threading;
 using System.Windows.Controls;
-using System.Windows.Data;
 using System.Windows.Forms;
-using System.Windows.Documents;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using System.IO;
-using System.Windows.Threading;
+using Noesis.Javascript;
 
 namespace CopyPasteTool
 {
@@ -25,18 +18,19 @@ namespace CopyPasteTool
 
         private bool open = true;
 
-        public static bool isWeb = false;
+        public static bool isScript = false;
         private static bool hookRun = false;
         private static string param2 = null;
         private static string otherForText = "";
-        public static string htmlDir;
 
         private string currentDir = Directory.GetCurrentDirectory();
+
+        private static string temp_script_code;
 
         public MainWindow()
         {
             InitializeComponent();
-            this.webBrowser.LoadCompleted += WebBrowser_LoadCompleted;
+
             // 按键钩子
             hook = new KeyboardHook();
             // 钩住键按下
@@ -45,14 +39,10 @@ namespace CopyPasteTool
             // hook.KeyPressEvent += KeyPressEvent;
             //安装键盘钩子
             hook.Start();
-            // html保存路径
-            htmlDir = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
-            htmlDir = htmlDir.Substring(0, htmlDir.LastIndexOf("\\") + 1) + "webBrowserTemp.html";
             StringBuilder sb = new StringBuilder();
             sb.AppendLine();
-            sb.AppendLine("js/html");
-            sb.AppendLine(".html/.js");
-            sb.AppendLine("create js/html");
+            sb.AppendLine("js");
+            sb.AppendLine("create js");
             sb.AppendLine("use cv.js");
             // 提示
             this.otherText.ToolTip = sb.ToString();
@@ -162,7 +152,7 @@ namespace CopyPasteTool
         private void OtherText_TextChanged(object s, TextChangedEventArgs e)
         {
             bool debug = false;
-            isWeb = false;
+            isScript = false;
             otherForText = this.otherText.Text.Trim();
             if ("".Equals(otherForText))
             {
@@ -181,28 +171,13 @@ namespace CopyPasteTool
                 param2 = otherForText.Substring(idx + 4);
                 otherForText = otherForText.Substring(0, idx + 3);
             }
-            else if ((idx = otherForText.IndexOf(".html:")) > 0)
-            {
-                param2 = otherForText.Substring(idx + 6);
-                otherForText = otherForText.Substring(0, idx + 5);
-            }
 
-            if ((otherForText.EndsWith(".html") || otherForText.EndsWith(".js")) && File.Exists(otherForText))
+            if (otherForText.EndsWith(".js") && File.Exists(otherForText))
             {
-                string txt = File.ReadAllText(otherForText);
-                if (otherForText.EndsWith(".js"))
-                {
-                    CreateHtmlByJs(txt);
-                }
-                else
-                {
-                    CreateHtml(txt);
-                }
-                changeWebBrowser(htmlDir);
-            }
-            else if (otherForText.StartsWith("http"))
-            {
-                changeWebBrowser(otherForText);
+                isScript = true;
+                string scriptCode = File.ReadAllText(otherForText);
+                LoadJavaScript(scriptCode);
+                CacheHelper.cacheOtherText(otherForText);
             }
             else if (otherForText.StartsWith("create "))
             {
@@ -211,10 +186,6 @@ namespace CopyPasteTool
                 {
                     file = "temp.js";
                 }
-                else if ("html".Equals(file))
-                {
-                    file = "temp.html";
-                }
                 string path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\" + file;
                 if (file.EndsWith(".js"))
                 {
@@ -222,14 +193,8 @@ namespace CopyPasteTool
                     this.otherText.Text = path;
                     this.otherText.Select(path.Length, 0);
                 }
-                else if (file.EndsWith(".html"))
-                {
-                    File.WriteAllText(path, HtmlHelper.GetHtmlCode());
-                    this.otherText.Text = path;
-                    this.otherText.Select(path.Length, 0);
-                }
             }
-            else if (otherForText.StartsWith("use ") && (otherForText.EndsWith(".js") || otherForText.EndsWith(".html")))
+            else if (otherForText.StartsWith("use ") && (otherForText.EndsWith(".js")))
             {
                 string file = otherForText.Replace("use ", "").Trim();
                 string path = currentDir + "\\" + file;
@@ -242,10 +207,6 @@ namespace CopyPasteTool
                         {
                             File.WriteAllText(path, HtmlHelper.GetJsCode());
                         }
-                        else if (file.EndsWith(".html"))
-                        {
-                            File.WriteAllText(path, HtmlHelper.GetHtmlCode());
-                        }
                     }
                 }
                 this.otherText.Text = path;
@@ -257,15 +218,15 @@ namespace CopyPasteTool
             }
         }
 
-        private void changeWebBrowser(string urlOrPath)
+        private void LoadJavaScript(string jsCode)
         {
-            this.webBrowser.Navigate(new Uri(urlOrPath));
-            isWeb = true;
-            CacheHelper.cacheOtherText(otherForText);
-        }
+            if (jsCode != null && !"".Equals(jsCode))
+            {
+                temp_script_code = jsCode;
+            }
 
-        private void WebBrowser_LoadCompleted(object sender, NavigationEventArgs e)
-        {
+            this.combo_params.Items.Clear();
+            this.combo_params.SelectedIndex = -1;
             object result = invokeJsMethod("params", null, false);
             if (result != null)
             {
@@ -286,23 +247,11 @@ namespace CopyPasteTool
 
         private void Combo_params_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            param2 = this.combo_params.SelectedItem.ToString();
+            param2 = this.combo_params.SelectedItem != null ? this.combo_params.SelectedItem.ToString() : null;
             if ("NULL".Equals(param2))
             {
                 param2 = null;
             }
-        }
-
-        private void CreateHtml(string htmlCode)
-        {
-            StreamWriter sw = new StreamWriter(htmlDir, false, Encoding.GetEncoding("GB2312"));
-            sw.WriteLine(htmlCode);
-            sw.Close();
-        }
-
-        private void CreateHtmlByJs(string jsCode)
-        {
-            CreateHtml(HtmlHelper.GetHtmlCode(jsCode));
         }
 
         private delegate void js(string text);
@@ -321,7 +270,7 @@ namespace CopyPasteTool
 
         public string invokeJsMethod(string param, bool debug)
         {
-            if (!isWeb)
+            if (!isScript)
             {
                 return param;
             }
@@ -331,14 +280,29 @@ namespace CopyPasteTool
 
         public object invokeJsMethod(string method, string param, bool debug)
         {
-            object result = null;
             try
             {
-                this.webBrowser.Dispatcher.Invoke(new js((param1) =>
+                using (JavascriptContext context = new JavascriptContext())
                 {
-                    result = this.webBrowser.InvokeScript(method, param1, param2);
+
+                    context.SetParameter("_request", new Func<string, string, string, string, string>
+                        ((url, httpMethod, body, contentType) =>
+                        {
+                            return HttpHelper.request(url, httpMethod, body, contentType);
+                        }));
+
+                    context.SetParameter("_param1", param);
+                    context.SetParameter("_param2", param2);
+                    context.SetParameter("_result", null);
+
+
+                    string code = HtmlHelper.GetDefaultJs() + temp_script_code + ";_result = " + method + "(_param1, _param2);";
+                    context.Run(code);
+
+                    object result = context.GetParameter("_result");
                     Console.WriteLine("执行结果：" + result);
-                }), param);
+                    return result;
+                }
             }
             catch (Exception e)
             {
@@ -347,15 +311,12 @@ namespace CopyPasteTool
                 {
                     return "发生异常：" + e.Message;
                 }
+                else
+                {
+                    return null;
+                }
             }
-            return result;
         }
 
-        private void Combo_params_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
-        {
-            this.combo_params.Items.Clear();
-            this.combo_params.SelectedIndex = -1;
-            WebBrowser_LoadCompleted(null, null);
-        }
     }
 }

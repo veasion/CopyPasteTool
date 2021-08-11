@@ -25,3 +25,6 @@ C:\Users\user\source\repos\CopyPasteTool\obj\Debug\CopyPasteTool.csproj.CoreComp
 C:\Users\user\source\repos\CopyPasteTool\obj\Debug\CopyPasteTool.exe
 C:\Users\user\source\repos\CopyPasteTool\obj\Debug\CopyPasteTool.pdb
 C:\Users\user\source\repos\CopyPasteTool\obj\Debug\CopyPasteTool.DebugForm.resources
+C:\Users\user\source\repos\CopyPasteTool\bin\Debug\CopyPasteTool.exe.config
+C:\Users\user\source\repos\CopyPasteTool\bin\Debug\Noesis.Javascript.dll
+C:\Users\user\source\repos\CopyPasteTool\obj\Debug\CopyPasteTool.csproj.CopyComplete

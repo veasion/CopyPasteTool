@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:CopyPasteTool"
         mc:Ignorable="d"
-        Title="Copy Paste Tool" Height="224.353" Width="305.791" Unloaded="Window_Unloaded" WindowStartupLocation="CenterScreen" ResizeMode="NoResize">
+        Title="Copy Paste Tool" Height="199.967" Width="305.791" Unloaded="Window_Unloaded" WindowStartupLocation="CenterScreen" ResizeMode="NoResize">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="14*"/>
@@ -16,8 +16,7 @@
         <RadioButton x:Name="radio_customize" Content="自定义" HorizontalAlignment="Left" Margin="5,70,0,0" VerticalAlignment="Top" IsChecked="True" Height="25" FontSize="14" Checked="RadioCustomize_Checked" Grid.Column="1"/>
         <RadioButton x:Name="radio_close" Content="关闭" HorizontalAlignment="Left" Margin="180,70,0,0" Height="25" VerticalAlignment="Top" Checked="RadioClose_Checked" FontSize="14" Grid.Column="1"/>
         <TextBox x:Name="otherText" HorizontalAlignment="Left" Height="23" Margin="9,112,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="282" TextChanged="OtherText_TextChanged" Grid.ColumnSpan="2" MaxLines="10"/>
-        <WebBrowser x:Name="webBrowser" HorizontalAlignment="Left" Height="47" Margin="-1,145,-3.281,0" VerticalAlignment="Top" Width="304.281" Grid.ColumnSpan="3"/>
-        <ComboBox x:Name="combo_params" Grid.Column="1" HorizontalAlignment="Left" Margin="84.86,68.377,0,0" VerticalAlignment="Top" Width="69.784" SelectionChanged="Combo_params_SelectionChanged" MouseDoubleClick="Combo_params_MouseDoubleClick"/>
+        <ComboBox x:Name="combo_params" Grid.Column="1" HorizontalAlignment="Left" Margin="84.86,68.377,0,0" VerticalAlignment="Top" Width="69.784" SelectionChanged="Combo_params_SelectionChanged"/>
 
     </Grid>
 </Window>

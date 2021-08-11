@@ -6,55 +6,33 @@ namespace CopyPasteTool
 {
     class HtmlHelper
     {
-        public static string GetHtmlCode()
-        {
-            return GetHtmlCode(null);
-        }
 
-        public static string GetHtmlCode(string jsCode)
+        public static string GetDefaultJs()
         {
-            if (jsCode == null)
-            {
-                jsCode = GetJsCode();
-            }
-            return "<!DOCTYPE html>\n" +
-                "<html lang=\"zh-CN\">\n" +
-                "<head>\n" +
-                "<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge,chrome=1\" />\n" +
-                "</head>\n" +
-                "<body></body>\n" +
-                "<script type=\"text/javascript\">\n" +
-                "(function(){\n" +
-                "\t// 旧 ie 浏览器不兼容新 js 特效处理\n" +
-                "\tthis.console = {log:function(str) {alert(str)}}\n" +
-                "\tString.prototype.trim = String.prototype.trim || function() {\n" +
-                "\t\treturn this.replace(/^\\s+|\\s+$/g,'');\n" +
-                "\t};\n" +
-                "\tString.prototype.startsWith = String.prototype.startsWith || function (str) {\n" +
-                "\t\treturn this.indexOf(str) == 0;\n" +
+            return "// 旧 ie 浏览器不兼容新 js 特效处理\n" +
+                "this.console = {log:function(str) {alert(str);}}\n" +
+                "String.prototype.trim = String.prototype.trim || function() {\n" +
+                "\treturn this.replace(/^\\s+|\\s+$/g,'');\n" +
+                "};\n" +
+                "String.prototype.startsWith = String.prototype.startsWith || function (str) {\n" +
+                "\treturn this.indexOf(str) == 0;\n" +
+                "}\n" +
+                "String.prototype.endsWith = String.prototype.endsWith || function (str) {\n" +
+                "\tif (str.length > this.length) {\n" +
+                "\t\treturn false;\n" +
                 "\t}\n" +
-                "\tString.prototype.endsWith = String.prototype.endsWith || function (str) {\n" +
-                "\t\tif (str.length > this.length) {\n" +
-                "\t\t\treturn false;\n" +
-                "\t\t}\n" +
-                "\t\treturn this.substring(this.length - str.length) == str;\n" +
-                "\t}\n" +
-                "\tObject.keys = Object.keys || function (o) {\n" +
-                "\t\tvar k = [], p;\n" +
-                "\t\tfor (p in o) if (Object.prototype.hasOwnProperty.call(o, p)) k.push(p);\n" +
-                "\t\treturn k;\n" +
-                "\t}\n" +
-                "\tif (!this.JSON) {\n" +
-                "\t\tthis.JSON = {};\n" +
-                "\t\tthis.JSON.parse = function (s) { return eval(\"(\" + s + \")\"); };\n" +
-                "\t\tthis.JSON.stringify = function() { return '不支持JSON.stringify'; }\n" +
-                "\t}\n" +
-                "})();\n" +
-                "\n" +
-                jsCode +
-                "\n" +
-                "</script>\n" +
-                "</html>";
+                "\treturn this.substring(this.length - str.length) == str;\n" +
+                "}\n" +
+                "Object.keys = Object.keys || function (o) {\n" +
+                "\tvar k = [], p;\n" +
+                "\tfor (p in o) if (Object.prototype.hasOwnProperty.call(o, p)) k.push(p);\n" +
+                "\treturn k;\n" +
+                "}\n" +
+                "if (!this.JSON) {\n" +
+                "\tthis.JSON = {};\n" +
+                "\tthis.JSON.parse = function (s) { return eval(\"(\" + s + \")\"); };\n" +
+                "\tthis.JSON.stringify = function() { return '不支持JSON.stringify'; }\n" +
+                "}\n";
         }
 
         public static string GetJsCode()
