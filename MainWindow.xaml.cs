@@ -84,10 +84,17 @@ namespace CopyPasteTool
                 {
                     return;
                 }
+                if (!isScript)
+                {
+                    return;
+                }
                 hookRun = true;
                 string text = this.GetClipboardText();
-                text = invokeJsMethod(text, false);
-                this.SetClipboardText(text);
+                object result = invokeJsMethod("change", text, false);
+                if (result != null)
+                {
+                    this.SetClipboardText(result.ToString());
+                }
             }
             catch (Exception e)
             {
@@ -108,17 +115,19 @@ namespace CopyPasteTool
         {
             try
             {
+                Thread.Sleep(100);
                 string text = System.Windows.Clipboard.GetText();
                 if (text == null || "".Equals(text))
                 {
-                    Thread.Sleep(200);
+                    Thread.Sleep(100);
                     text = System.Windows.Clipboard.GetText();
                 }
                 return text;
             }
             catch (Exception)
             {
-                return GetClipboardText();
+                Thread.Sleep(100);
+                return System.Windows.Clipboard.GetText();
             }
         }
 
@@ -130,7 +139,7 @@ namespace CopyPasteTool
             }
             catch (Exception)
             {
-                SetClipboardText(text);
+                System.Windows.Clipboard.SetText(text);
             }
         }
 
@@ -268,16 +277,6 @@ namespace CopyPasteTool
             }
         }
 
-        public string invokeJsMethod(string param, bool debug)
-        {
-            if (!isScript)
-            {
-                return param;
-            }
-            object result = invokeJsMethod("change", param, debug);
-            return result != null ? result.ToString() : param;
-        }
-
         public object invokeJsMethod(string method, string param, bool debug)
         {
             try
@@ -300,7 +299,7 @@ namespace CopyPasteTool
                     context.Run(code);
 
                     object result = context.GetParameter("_result");
-                    Console.WriteLine("执行结果：" + result);
+                    Console.WriteLine("参数：" + param + "\r\n执行结果：" + result);
                     return result;
                 }
             }

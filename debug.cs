@@ -34,7 +34,8 @@ namespace CopyPasteTool
 
         private void But_run_Click(object sender, EventArgs e)
         {
-            this.textBox_result.Text = main.invokeJsMethod(this.textBox_text.Text, true);
+            object result = main.invokeJsMethod("change", this.textBox_text.Text, true);
+            this.textBox_result.Text = result != null ? result.ToString() : "";
         }
 
         private void TextBox_param2_TextChanged(object sender, EventArgs e)
